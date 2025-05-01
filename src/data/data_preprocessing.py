@@ -87,26 +87,39 @@ def save_data(data:pd.DataFrame,save_path:str,save_name:str):
 # main
 def main():
     # load training data
-    training_data = load_data('data/raw/training_set.csv')
+    X_train = load_data('data/raw/X_train.csv')
+    y_train = load_data('data/raw/y_train.csv')
     # load testing data
-    testing_data = load_data('data/raw/testing_set.csv')
+    X_test = load_data('data/raw/X_test.csv')
+    y_test = load_data('data/raw/y_test.csv')
 
-    training_data = training_data.dropna()
-    testing_data = testing_data.dropna()
+    # Find indices with null values in 'clean_comment'
+    nan_index_train = X_train[X_train['clean_comment'].isnull()].index
+    nan_index_test = X_test[X_test['clean_comment'].isnull()].index
+
+    # Drop those indices from both X and y
+    X_train.drop(nan_index_train, inplace=True)
+    y_train.drop(nan_index_train, inplace=True)
+
+    X_test.drop(nan_index_test, inplace=True)
+    y_test.drop(nan_index_test, inplace=True)
+
 
     # apply preprocessing on training data
-    training_data = preprocessing(training_data)
+    X_train = preprocessing(X_train)
     # apply preprocessing on testing data
-    testing_data = preprocessing(testing_data)
+    X_test = preprocessing(X_test)
 
     # create save path
     save_path = os.path.join('data','interim')
 
     # save processed training data
-    save_data(training_data,save_path=save_path,save_name='train_processed.csv')
+    save_data(X_train,save_path=save_path,save_name='X_train.csv')
+    save_data(y_train,save_path=save_path,save_name='y_train.csv')
     
     # save processed testing data
-    save_data(testing_data,save_path=save_path,save_name='testing_processed.csv')
+    save_data(X_test,save_path=save_path,save_name='X_test.csv')
+    save_data(y_test,save_path=save_path,save_name='y_test.csv')
 
 if __name__=="__main__":
     main()

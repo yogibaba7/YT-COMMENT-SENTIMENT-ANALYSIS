@@ -31,7 +31,7 @@ def load_data(data_path:str)->pd.DataFrame:
     try:
         # read data from url
         df = pd.read_csv(data_path)
-        
+        print(df['category'].value_counts())
         logger.debug(f"{df.shape[0]} rows and {df.shape[1]} columns {df.columns} loaded from data")
         logger.debug(f"data loaded successfully from {data_path}")
 
@@ -60,8 +60,12 @@ def preprocessing(data:pd.DataFrame)->pd.DataFrame:
         # Remove non-English characters from the 'clean_comment' column , Keeping only standard English letters, digits, and common punctuation
         data['clean_comment'] = data['clean_comment'].apply(lambda x: re.sub(r'[^A-Za-z0-9\s!?.,]', '', str(x)))
 
+        data['clean_comment'] = data['clean_comment'].apply(lambda x : x.strip())
+
         # drop duplicate
         data.drop_duplicates(inplace=True)
+
+        data['category'] = data['category'].map({0:0,1:1,-1:2})
 
         logger.debug(f"Basic preprocessing applied now the shape of data is {data.shape}")
         
@@ -74,12 +78,13 @@ def preprocessing(data:pd.DataFrame)->pd.DataFrame:
 def create_train_test_set(data:pd.DataFrame):
     try:
         # train test split
-        training_set,testing_set = train_test_split(data,test_size=load_params('data_ingestion','test_size'),random_state=42)
+        X_train,X_test,y_train,y_test = train_test_split(data.drop(columns=['category']),data['category'],test_size=load_params('data_ingestion','test_size'),random_state=42,stratify=data['category'])
 
-        logger.debug(f"trainset shape {training_set.shape}")
-        logger.debug(f"testingset shape {testing_set.shape}")
 
-        return training_set,testing_set
+        logger.debug(f"trainset shape {X_train.shape}")
+        logger.debug(f"testingset shape {X_test.shape}")
+
+        return X_train,X_test,y_train,y_test
     
     except Exception as e:
         logger.error(f"error occured -> {e}")
@@ -103,13 +108,15 @@ def main():
         # preprocess data
         data = preprocessing(data)
         # make training and testing set
-        training_data,testing_data = create_train_test_set(data)
+        X_train,X_test,y_train,y_test = create_train_test_set(data)
         # create save 
         save_path = os.path.join('data','raw')
         # save training data
-        save_data(training_data,save_path=save_path,save_name='training_set.csv')
+        save_data(X_train,save_path=save_path,save_name='X_train.csv')
+        save_data(y_train,save_path=save_path,save_name='y_train.csv')
         # save testing data
-        save_data(testing_data,save_path=save_path,save_name='testing_set.csv')
+        save_data(X_test,save_path=save_path,save_name='X_test.csv')
+        save_data(y_test,save_path=save_path,save_name='y_test.csv')
 
         logger.debug('DataIngestion Completed.....')
     except Exception as e:
