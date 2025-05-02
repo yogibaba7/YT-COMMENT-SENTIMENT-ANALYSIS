@@ -21,3 +21,10 @@ stages:
     - data/processed
     - models/resampler.pkl
     - models/vector.pkl
+  model_building:
+    cmd: python src/model/model_building.py
+    deps:
+    - data/processed
+    - src/model/model_building.py
+    outs:
+    - models/model.pkl
